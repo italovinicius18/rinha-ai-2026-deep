@@ -1,6 +1,7 @@
-# rinha-ai-2026-deep (submission branch)
+# rinha-ai-2026-deep — variant v2
 
-Config variant of [italovinicius18/rinha-ai-2026-ignore](https://github.com/italovinicius18/rinha-ai-2026-ignore).
-Same Docker Hub images, only `docker-compose.yml` env / CPU split differs.
+Submission branch only. Config of [italovinicius18/rinha-ai-2026-ignore](https://github.com/italovinicius18/rinha-ai-2026-ignore).
 
-See `docker-compose.yml` for the specifics.
+**v2 config**: NPROBE=5 + GOGC=100 (Go default). Tests if tighter GC pacing reduces heap pressure near the 350 MB cgroup cap.
+
+Same images: `italovinicius18/rinha-2026-api:v1`, `italovinicius18/rinha-2026-data-prep:v1`.

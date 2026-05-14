@@ -1,8 +1,10 @@
 name: rinha-2026-italo-deep
 
-# Variant: NPROBE=8 + CPU rebalance toward API.
-# Total budget: haproxy 0.10 + data-prep 0.05 + 2×api 0.425 = 1.00 CPU / 350 MB.
-# Test if extra API CPU (was 0.40) keeps NPROBE=8 below saturation on Mac Mini.
+# Variant deep v2: NPROBE=5 + GOGC=100 (was 200). Same CPU split as canonical.
+# Hypothesis: Mac Mini reports 325/350 MB used, near the cgroup cap. GOGC=200
+# means heap doubles between GCs — possibly contributing to page-cache pressure
+# on the mmap'd index. GOGC=100 (Go's default) keeps the heap tighter.
+# Total budget: haproxy 0.15 + data-prep 0.05 + 2×api 0.40 = 1.00 CPU / 350 MB.
 
 services:
   data-prep:
@@ -20,9 +22,9 @@ services:
     environment:
       LISTEN_ADDR: ":8080"
       INDEX_PATH: "/data/index.bin"
-      NPROBE: "8"
+      NPROBE: "5"
       GOMAXPROCS: "1"
-      GOGC: "200"
+      GOGC: "100"
     volumes:
       - index-data:/data:ro
     depends_on:
@@ -32,7 +34,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.425"
+          cpus: "0.40"
           memory: "155MB"
 
   api2:
@@ -40,9 +42,9 @@ services:
     environment:
       LISTEN_ADDR: ":8080"
       INDEX_PATH: "/data/index.bin"
-      NPROBE: "8"
+      NPROBE: "5"
       GOMAXPROCS: "1"
-      GOGC: "200"
+      GOGC: "100"
     volumes:
       - index-data:/data:ro
     depends_on:
@@ -52,7 +54,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.425"
+          cpus: "0.40"
           memory: "155MB"
 
   haproxy:
@@ -66,7 +68,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.10"
+          cpus: "0.15"
           memory: "15MB"
 
 networks:

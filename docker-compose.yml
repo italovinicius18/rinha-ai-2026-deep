@@ -1,9 +1,12 @@
 name: rinha-2026-italo-deep
 
-# Variant deep v2: NPROBE=5 + GOGC=100 (was 200). Same CPU split as canonical.
-# Hypothesis: Mac Mini reports 325/350 MB used, near the cgroup cap. GOGC=200
-# means heap doubles between GCs — possibly contributing to page-cache pressure
-# on the mmap'd index. GOGC=100 (Go's default) keeps the heap tighter.
+# Variant deep v4: Adaptive NPROBE=4 fast + NPROBE_DEEP=8 on borderline.
+# After #4378 confirmed adaptive 5/8 wins (+5071 vs +4995 plain), this pushes
+# the fast pass even lower. Mean query time should drop (NPROBE=4 covers 0.78%
+# of corpus vs NPROBE=5 at 0.98%); borderlines redo at NPROBE=8 to compensate.
+# Risk: more borderlines (less accurate fast → more deep) might increase
+# average work back up. Trade-off TBD.
+# Image: italovinicius18/rinha-2026-api:v2-adaptive (NPROBE=4 fast).
 # Total budget: haproxy 0.15 + data-prep 0.05 + 2×api 0.40 = 1.00 CPU / 350 MB.
 
 services:
@@ -18,13 +21,14 @@ services:
           memory: "25MB"
 
   api1:
-    image: italovinicius18/rinha-2026-api:v1
+    image: italovinicius18/rinha-2026-api:v2-adaptive
     environment:
       LISTEN_ADDR: ":8080"
       INDEX_PATH: "/data/index.bin"
-      NPROBE: "5"
+      NPROBE: "4"
+      NPROBE_DEEP: "8"
       GOMAXPROCS: "1"
-      GOGC: "100"
+      GOGC: "200"
     volumes:
       - index-data:/data:ro
     depends_on:
@@ -38,13 +42,14 @@ services:
           memory: "155MB"
 
   api2:
-    image: italovinicius18/rinha-2026-api:v1
+    image: italovinicius18/rinha-2026-api:v2-adaptive
     environment:
       LISTEN_ADDR: ":8080"
       INDEX_PATH: "/data/index.bin"
-      NPROBE: "5"
+      NPROBE: "4"
+      NPROBE_DEEP: "8"
       GOMAXPROCS: "1"
-      GOGC: "100"
+      GOGC: "200"
     volumes:
       - index-data:/data:ro
     depends_on:

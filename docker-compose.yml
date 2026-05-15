@@ -1,12 +1,11 @@
 name: rinha-2026-italo-deep
 
-# Variant deep v4: Adaptive NPROBE=4 fast + NPROBE_DEEP=8 on borderline.
-# After #4378 confirmed adaptive 5/8 wins (+5071 vs +4995 plain), this pushes
-# the fast pass even lower. Mean query time should drop (NPROBE=4 covers 0.78%
-# of corpus vs NPROBE=5 at 0.98%); borderlines redo at NPROBE=8 to compensate.
-# Risk: more borderlines (less accurate fast → more deep) might increase
-# average work back up. Trade-off TBD.
-# Image: italovinicius18/rinha-2026-api:v2-adaptive (NPROBE=4 fast).
+# Variant deep v5: Adaptive NPROBE=5 fast + NPROBE_DEEP=10 (mild deep pass).
+# Probes top-5 + top-10 on borderlines — wider net than 5→8 (+5071 winner)
+# without the p99 penalty of 5→16 (locally crushed p99 to 27ms). Targets the
+# 1 FN that the 5→8 winner couldn't catch. Risk: extra 2 clusters scanned on
+# ~5% of queries adds ~0.5-1ms to those — acceptable if it kills the FN.
+# Image: italovinicius18/rinha-2026-api:v2-adaptive (NPROBE_DEEP env).
 # Total budget: haproxy 0.15 + data-prep 0.05 + 2×api 0.40 = 1.00 CPU / 350 MB.
 
 services:
@@ -25,8 +24,8 @@ services:
     environment:
       LISTEN_ADDR: ":8080"
       INDEX_PATH: "/data/index.bin"
-      NPROBE: "4"
-      NPROBE_DEEP: "8"
+      NPROBE: "5"
+      NPROBE_DEEP: "10"
       GOMAXPROCS: "1"
       GOGC: "200"
     volumes:
@@ -46,8 +45,8 @@ services:
     environment:
       LISTEN_ADDR: ":8080"
       INDEX_PATH: "/data/index.bin"
-      NPROBE: "4"
-      NPROBE_DEEP: "8"
+      NPROBE: "5"
+      NPROBE_DEEP: "10"
       GOMAXPROCS: "1"
       GOGC: "200"
     volumes:

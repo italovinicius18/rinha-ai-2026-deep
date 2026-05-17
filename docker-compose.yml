@@ -1,12 +1,11 @@
 name: rinha-2026-italo-deep
 
-# Variant deep v5: Adaptive NPROBE=5 fast + NPROBE_DEEP=10 (mild deep pass).
-# Probes top-5 + top-10 on borderlines — wider net than 5→8 (+5071 winner)
-# without the p99 penalty of 5→16 (locally crushed p99 to 27ms). Targets the
-# 1 FN that the 5→8 winner couldn't catch. Risk: extra 2 clusters scanned on
-# ~5% of queries adds ~0.5-1ms to those — acceptable if it kills the FN.
-# Image: italovinicius18/rinha-2026-api:v2-adaptive (NPROBE_DEEP env).
-# Total budget: haproxy 0.15 + data-prep 0.05 + 2×api 0.40 = 1.00 CPU / 350 MB.
+# Variant deep v6: Adaptive NPROBE=5 / DEEP=10 + HAProxy CPU 0.20 / api 0.375 each.
+# Same canonical algorithm (best score so far: +5097-5102) but redistributes CPU
+# slightly toward HAProxy. The CFS-throttle rule (CLAUDE.md P10) says LB
+# starvation dominates p99 on tight budgets; canonical sits at HAProxy 0.15.
+# Hypothesis: bumping LB to 0.20 may further reduce p99 jitter on Mac Mini.
+# Total budget: haproxy 0.20 + data-prep 0.05 + 2×api 0.375 = 1.00 CPU / 350 MB.
 
 services:
   data-prep:
@@ -37,7 +36,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.40"
+          cpus: "0.375"
           memory: "155MB"
 
   api2:
@@ -58,7 +57,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.40"
+          cpus: "0.375"
           memory: "155MB"
 
   haproxy:
@@ -72,7 +71,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.15"
+          cpus: "0.20"
           memory: "15MB"
 
 networks:
